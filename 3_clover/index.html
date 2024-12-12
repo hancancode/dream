@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>커서 결계</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-wrap: wrap;
+    }
+.block-1 {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background-image: url('./img/1.png');
+  background-size: cover;
+  transition: transform 0.2s;
+  z-index: 10;
+  transform: translate(-70px, -70px); /* 좌측 50px, 위쪽 50px 이동 */
+  pointer-events: none; /* 클릭 이벤트 무시 */
+}
+
+.block-3 {
+      background-image: url('./img/3.png');
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background-size: cover;
+  z-index: 5; /* block3가 block1보다 위에 오게 설정 */
+}
+
+    .block-2, .block-3 {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-size: cover;
+    }
+    .block-2 {
+      background-image: url('./img/2.png');
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container"></div>
+  <script>
+const container = document.querySelector('.container');
+const block1Size = 70;
+const radius = 300;
+const block2Size = 100;
+const rows = Math.ceil(window.innerHeight / block1Size);
+const cols = Math.ceil(window.innerWidth / block1Size);
+
+// 기준 화면 크기 (2020년 맥북 프로 16인치 화면 기준)
+const baseWidth = 3072;  // 기준 창의 너비 (픽셀)
+const baseHeight = 1920; // 기준 창의 높이 (픽셀)
+const baseBlock2Count = 200;  // 기준 창에서의 block2 개수
+
+// 현재 창 크기에 비례한 비율 계산
+const widthRatio = window.innerWidth / baseWidth;
+const heightRatio = window.innerHeight / baseHeight;
+
+// 창 크기에 비례하여 2번 이미지의 개수 계산
+const adjustedBlock2Count = Math.round(baseBlock2Count * widthRatio * heightRatio);
+
+// 1.png 블록 추가
+for (let y = 0; y < rows; y++) {
+  for (let x = 0; x < cols; x++) {
+    const block1 = document.createElement('div');
+    block1.className = 'block-1';
+    block1.style.left = `${x * block1Size}px`;
+    block1.style.top = `${y * block1Size}px`;
+    container.appendChild(block1);
+  }
+}
+
+// 2.png 블록 추가 (창 크기에 맞게 비례한 개수로 추가)
+const block2Positions = [];
+for (let i = 0; i < adjustedBlock2Count; i++) {
+  const block2 = document.createElement('div');
+  block2.className = 'block-2';
+  const posX = Math.random() * (window.innerWidth - block2Size);
+  const posY = Math.random() * (window.innerHeight - block2Size);
+  block2.style.left = `${posX}px`;
+  block2.style.top = `${posY}px`;
+  container.appendChild(block2);
+  block2Positions.push({ x: posX, y: posY });
+}
+
+// 3.png 블록을 랜덤한 2.png 사이에 삽입
+const randomIndex = Math.floor(Math.random() * adjustedBlock2Count);
+const block3 = document.createElement('div');
+block3.className = 'block-3';
+block3.style.left = `${block2Positions[randomIndex].x}px`;
+block3.style.top = `${block2Positions[randomIndex].y}px`;
+
+// 3.png를 클릭 시 링크로 이동
+const link = document.createElement('a');
+link.href = '../4_monologue2/index.html';
+link.style.position = 'absolute';
+link.style.top = '0';
+link.style.left = '0';
+link.style.width = '100%';
+link.style.height = '100%';
+block3.appendChild(link);
+
+container.appendChild(block3);
+
+// 3.png 반경 100px 안의 2.png 숨기기
+const block3X = block2Positions[randomIndex].x + block2Size / 2;
+const block3Y = block2Positions[randomIndex].y + block2Size / 2;
+const hideRadius = 100;
+
+document.querySelectorAll('.block-2').forEach(block2 => {
+  const block2Rect = block2.getBoundingClientRect();
+  const block2X = block2Rect.left + block2Size / 2;
+  const block2Y = block2Rect.top + block2Size / 2;
+
+  const dx = block3X - block2X;
+  const dy = block3Y - block2Y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < hideRadius) {
+    block2.style.visibility = 'hidden';
+  }
+});
+
+// 커서 이동 시 1.png 밀어내기
+window.addEventListener('mousemove', (e) => {
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  document.querySelectorAll('.block-1').forEach(block => {
+    const blockRect = block.getBoundingClientRect();
+    const blockX = blockRect.left + block1Size / 2;
+    const blockY = blockRect.top + block1Size / 2;
+
+    const dx = blockX - mouseX;
+    const dy = blockY - mouseY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (distance < radius) {
+      const angle = Math.atan2(dy, dx);
+      offsetX = Math.cos(angle) * (radius - distance);
+      offsetY = Math.sin(angle) * (radius - distance);
+    }
+
+    // 50px 이동을 포함한 변환 적용
+    block.style.transform = `translate(${offsetX - 70}px, ${offsetY - 70}px)`; // 기존 이동 + 50px
+  });
+});
+
+
+  </script>
+</body>
+</html>
