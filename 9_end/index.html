@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>꿈만 같은 세상</title>
+  <style type="text/css">
+    @font-face {
+      font-family: 'LeeSeoyun';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+    body {
+      font-family: 'LeeSeoyun';
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    #poetText {
+      font-size: 2rem;
+      line-height: 200%;
+      text-align: center; /* 중앙 정렬 */
+      width: 80%;
+      opacity: 0;
+      animation: fadein 1s forwards;
+    }
+    .letter {
+      opacity: 0;
+      animation: fadein 1s forwards;
+    }
+    @keyframes fadein {
+      to {
+        opacity: 1;
+      }
+    }
+    button {
+      margin-top: 2rem;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      font-family: 'LeeSeoyun';
+      background-color: rgba(128, 128, 128, 0.5); /* 회색 + 투명도 50% */
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      transform: scale(1.1);
+      transition: 0.1s ease-in;
+      cursor: pointer;
+    }
+    button:active {
+      transform: scale(0.9);
+      filter: brightness(0.7);
+    }
+  </style>
+</head>
+<body>
+  <div id="poetText"></div>
+  <button onclick="location.href='../1_start/index.html'">돌아가기</button>
+  
+  <script type="text/javascript">
+    var poet1 = "꿈만 같은 세상을 다시 한번 경험하시겠어요?";
+    var poetArray1 = poet1.split(""); // 첫 번째 문장의 글자별로 분리
+    var s1 = 0;
+    var myTimer1;
+
+    // 첫 번째 문장 출력 시작
+    function startPoet1() {
+      myTimer1 = setInterval(print1, 100);
+    }
+
+    function print1() {
+      var t = document.createElement("span");
+
+      if (poetArray1[s1] === " ") {
+        t.innerHTML = "&nbsp;"; // 공백 처리
+      } else {
+        t.className = "letter"; // 철자 처리
+        t.innerHTML = poetArray1[s1];
+      }
+      poetText.appendChild(t);
+      s1++;
+
+      if (s1 == poetArray1.length) {
+        clearInterval(myTimer1); // 첫 번째 문장 끝나면 타이머 종료
+      }
+    }
+
+    // 첫 번째 문장 출력 시작
+    startPoet1();
+  </script>
+</body>
+</html>

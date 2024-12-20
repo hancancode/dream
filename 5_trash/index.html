@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>꿈만 같은 세상</title>
+  <style>
+
+        @font-face {
+    font-family: 'LeeSeoyun';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+    body {
+      font-family: 'LeeSeoyun';
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-image: url('./img/8.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow: hidden;
+      margin: 0;
+    }
+    #trash-bin {
+      position: absolute;
+      top: 20px;
+      width: 200px;
+      transition: opacity 1s;
+      z-index: 2;
+    }
+    #trash-area {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding-left: 200px; /* 좌측 200px 여백 */
+      padding-right: 200px; /* 우측 200px 여백 */
+    }
+    .trash, #lotto {
+      position: absolute;
+      cursor: pointer;
+    }
+    #lotto {
+      z-index: 0;
+      bottom: 120px; /* 로또를 100px 정도 띄운 위치로 설정 */
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .trash {
+      z-index: 1;
+    }
+
+    /* 글씨 스타일 */
+    #message {
+      position: fixed;
+      bottom: 80px; /* 하단에 띄우기 */
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: black;
+      opacity: 0;
+      display: none;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .message-letter {
+      opacity: 0;
+      display: inline-block;
+      animation: fadeIn 0.1s forwards;
+    }
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* 쓰레기 커지며 이동 및 페이드아웃 애니메이션 */
+    @keyframes growAndMove {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+        left: var(--start-x);
+        top: var(--start-y);
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+        left: var(--end-x);
+        top: var(--end-y);
+      }
+    }
+
+    .trash.move {
+      animation: growAndMove 1s forwards; /* 1초 동안 애니메이션 */
+    }
+  </style>
+</head>
+<body>
+  <img id="trash-bin" src="./img/1.png" alt="빈 휴지통">
+  <div id="trash-area">
+    <img id="lotto" src="./img/7.png" alt="로또">
+  </div>
+  <div id="message"></div>
+  <script>
+    const trashBin = document.getElementById('trash-bin');
+    const trashArea = document.getElementById('trash-area');
+    const lotto = document.getElementById('lotto');
+    const message = document.getElementById('message');
+
+    // 쓰레기 크기 지정 (각 이미지별 크기)
+    const trashSizes = {
+      3: { width: 147, height: 197 },
+      4: { width: 102, height: 76 },
+      5: { width: 148*1.2, height: 110*1.2 },
+      6: { width: 150, height: 150 }
+    };
+
+    let removedTrashCount = 0; // 제거된 쓰레기 개수
+
+    // 쓰레기 무작위 생성 함수
+    function generateRandomTrash(num) {
+      const binMargin = 200; // 쓰레기통 주변 공간 여백 (px)
+      const trashBinRect = trashBin.getBoundingClientRect(); // 쓰레기통 위치 정보
+      const lottoRect = lotto.getBoundingClientRect(); // 로또 위치 정보
+
+      for (let i = 0; i < num; i++) {
+        const trash = document.createElement('img');
+        const randomTrashNumber = Math.floor(Math.random() * 4) + 3; // 3 ~ 6 중 랜덤
+        trash.src = `./img/${randomTrashNumber}.png`; // 3.png ~ 6.png 중 무작위 선택
+        trash.classList.add('trash');
+
+        // 쓰레기 크기 지정 (각 이미지별 크기)
+        const size = trashSizes[randomTrashNumber];
+        trash.style.width = `${size.width}px`;
+        trash.style.height = `${size.height}px`;
+
+        // 랜덤한 위치 설정 (쓰레기통, 로또 주변 제외)
+        let x, y;
+        do {
+          x = Math.random() * (trashArea.offsetWidth - size.width);
+          y = Math.random() * (trashArea.offsetHeight - size.height-100);
+        } while (
+          (x >= trashBinRect.left - binMargin && x <= trashBinRect.right + binMargin &&
+          y >= trashBinRect.top - binMargin && y <= trashBinRect.bottom + binMargin) || // 쓰레기통 근처
+          (x >= lottoRect.left - binMargin && x <= lottoRect.right + binMargin && // 로또 근처
+          y >= lottoRect.top - binMargin && y <= lottoRect.bottom + binMargin)
+        );
+
+        trash.style.left = `${x}px`;
+        trash.style.top = `${y}px`;
+
+        // 클릭 이벤트 추가
+        trash.addEventListener('click', () => {
+          // 쓰레기통 방향으로 200px 이동하는 애니메이션 적용
+          const startX = parseFloat(trash.style.left);
+          const startY = parseFloat(trash.style.top);
+
+          const endX = trashBinRect.left + trashBinRect.width / 2 - size.width / 2; // 쓰레기통 중심으로 이동
+          const endY = trashBinRect.top + trashBinRect.height / 2 - size.height / 2;
+
+          trash.style.setProperty('--start-x', `${startX}px`);
+          trash.style.setProperty('--start-y', `${startY}px`);
+          trash.style.setProperty('--end-x', `${endX}px`);
+          trash.style.setProperty('--end-y', `${endY}px`);
+
+          trash.classList.add('move'); // 애니메이션 시작
+          trashBin.src = './img/2.png'; // 휴지통 디졸브 효과
+          trashBin.style.opacity = 0.5;
+
+          setTimeout(() => {
+            trashBin.src = './img/1.png';
+            trashBin.style.opacity = 1;
+          }, 1000);
+          
+          removedTrashCount++; // 쓰레기 제거 카운트 증가
+          checkMessageDisplay(); // 메시지 띄우기 체크
+          checkLottoClickable(); // 로또 클릭 가능 여부 체크
+
+          // 애니메이션이 끝난 후 쓰레기 요소 숨기기
+          setTimeout(() => {
+            trash.style.display = 'none';
+          }, 1000); // 애니메이션 시간 (1초 후에 숨기기)
+        });
+
+        trashArea.appendChild(trash);
+      }
+    }
+
+    // 메시지 표시 함수
+    function checkMessageDisplay() {
+      if (removedTrashCount === 10) {
+        const messageText = "뭔가 있는데... 주변 쓰레기를 깔끔히 치워보자.";
+        showMessage(messageText); // 메시지 띄우기
+      }
+    }
+
+    // 글자 한 글자씩 페이드인
+    function showMessage(text) {
+      message.innerHTML = ''; // 기존 메시지 초기화
+      message.style.display = 'block';
+      message.style.opacity = 1;
+
+      let delay = 0;
+      [...text].forEach((letter, index) => {
+        const span = document.createElement('span');
+        span.classList.add('message-letter');
+        span.style.animationDelay = `${delay}s`;
+        span.textContent = letter;
+        message.appendChild(span);
+        delay += 0.1; // 각 글자마다 딜레이 추가
+      });
+
+      // 3초 후 메시지 사라지기
+      setTimeout(() => {
+        message.style.opacity = 0;
+        setTimeout(() => {
+          message.style.display = 'none';
+        }, 10000); // 애니메이션 후 숨기기
+      }, 3000);
+    }
+
+    // 로또 클릭 가능 여부 체크
+    function checkLottoClickable() {
+      const remainingTrash = document.querySelectorAll('.trash');
+      const lottoRect = lotto.getBoundingClientRect();
+      let isLottoClickable = true;
+
+      // 모든 쓰레기가 로또와 겹치지 않는지 확인
+      for (let trash of remainingTrash) {
+        const trashRect = trash.getBoundingClientRect();
+        if (
+          trashRect.left < lottoRect.right &&
+          trashRect.right > lottoRect.left &&
+          trashRect.top < lottoRect.bottom &&
+          trashRect.bottom > lottoRect.top
+        ) {
+          isLottoClickable = false; // 쓰레기가 로또 위에 있으면 클릭 불가능
+          break;
+        }
+      }
+
+      // 로또 클릭 가능 여부 설정
+      if (isLottoClickable) {
+        lotto.style.zIndex = 1;
+        lotto.style.cursor = 'pointer'; // 클릭 가능하도록 커서 변경
+        lotto.removeEventListener('click', lottoClickHandler); // 중복 이벤트 방지
+        lotto.addEventListener('click', lottoClickHandler); // 클릭 이벤트 추가
+      } else {
+        lotto.style.cursor = 'default'; // 클릭 불가능하도록 커서 변경
+      }
+    }
+
+    // 로또 클릭 시 페이지 이동
+    function lottoClickHandler() {
+      window.location.href = '../6_monologue3/index.html'; // 로또 클릭 시 페이지 이동
+    }
+
+    // 초기 설정
+    generateRandomTrash(300); // 쓰레기 300개 생성
+  </script>
+</body>
+</html>
